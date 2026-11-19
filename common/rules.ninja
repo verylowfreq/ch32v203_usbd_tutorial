@@ -1,0 +1,40 @@
+# rules.ninja - Toolchain and common build rules (included from build.ninja)
+
+cross   = riscv-none-elf-
+wlink   = C:/DATA-0/bin/wlink.exe
+
+arch    = -march=rv32imac_zicsr_zifencei -mabi=ilp32 -msmall-data-limit=8
+cflags_common = $arch -Os -g3 -std=gnu11 -Wall -Wextra -Wno-unused-parameter $
+    -ffunction-sections -fdata-sections -ffreestanding -fno-builtin $
+    -fno-tree-loop-distribute-patterns -Icommon
+ldflags = $arch -nostartfiles -nostdlib -Wl,--gc-sections -Wl,--print-memory-usage $
+    -Tcommon/link.ld
+
+rule cc
+  command = ${cross}gcc $cflags_common $cflags -MMD -MF $out.d -c $in -o $out
+  depfile = $out.d
+  deps = gcc
+  description = CC $out
+
+rule as
+  command = ${cross}gcc $arch -g -MMD -MF $out.d -c $in -o $out
+  depfile = $out.d
+  deps = gcc
+  description = AS $out
+
+rule link
+  command = ${cross}gcc $ldflags -Wl,-Map=$map -o $out $in -lgcc
+  description = LINK $out
+
+rule bin
+  command = ${cross}objcopy -O binary $in $out
+  description = BIN $out
+
+rule lst
+  command = cmd /c ${cross}objdump -d -S $in > $out
+  description = LST $out
+
+rule flash
+  command = $wlink flash $in
+  description = FLASH $in
+  pool = console

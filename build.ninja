@@ -1,0 +1,85 @@
+# build.ninja - CH32V203 USB tutorial
+#
+#   ninja                 build every step
+#   ninja step1           build step1 only
+#   ninja flash-step1     build step1 and flash it with wlink
+#
+ninja_required_version = 1.10
+builddir = build
+include common/rules.ninja
+
+# ---- common ----------------------------------------------------------
+build build/common/startup.o : as common/startup.S
+build build/common/system.o  : cc common/system.c
+build build/common/dbglog.o  : cc common/dbglog.c
+
+# ---- step1: enumeration ---------------------------------------------
+build build/step1/main.o : cc step1_enum/main.c
+  cflags = -Istep1_enum
+build build/step1/usbd.o : cc step1_enum/usbd.c
+  cflags = -Istep1_enum
+build build/step1/desc.o : cc step1_enum/desc.c
+  cflags = -Istep1_enum
+build build/step1/fw.elf : link build/common/startup.o build/common/system.o $
+    build/common/dbglog.o build/step1/main.o build/step1/usbd.o build/step1/desc.o
+  map = build/step1/fw.map
+build build/step1/fw.bin : bin build/step1/fw.elf
+build build/step1/fw.lst : lst build/step1/fw.elf
+build step1 : phony build/step1/fw.bin build/step1/fw.lst
+build flash-step1 : flash build/step1/fw.elf
+
+# ---- step2: WinUSB (MS OS 2.0) + vendor control requests ------------
+build build/step2/main.o : cc step2_winusb/main.c
+  cflags = -Istep2_winusb
+build build/step2/usbd.o : cc step2_winusb/usbd.c
+  cflags = -Istep2_winusb
+build build/step2/desc.o : cc step2_winusb/desc.c
+  cflags = -Istep2_winusb
+build build/step2/vendor.o : cc step2_winusb/vendor.c
+  cflags = -Istep2_winusb
+build build/step2/fw.elf : link build/common/startup.o build/common/system.o $
+    build/common/dbglog.o build/step2/main.o build/step2/usbd.o build/step2/desc.o $
+    build/step2/vendor.o
+  map = build/step2/fw.map
+build build/step2/fw.bin : bin build/step2/fw.elf
+build build/step2/fw.lst : lst build/step2/fw.elf
+build step2 : phony build/step2/fw.bin build/step2/fw.lst
+build flash-step2 : flash build/step2/fw.elf
+
+# ---- step3: Bulk IN/OUT ---------------------------------------------
+build build/step3/main.o : cc step3_bulk/main.c
+  cflags = -Istep3_bulk
+build build/step3/usbd.o : cc step3_bulk/usbd.c
+  cflags = -Istep3_bulk
+build build/step3/desc.o : cc step3_bulk/desc.c
+  cflags = -Istep3_bulk
+build build/step3/vendor.o : cc step3_bulk/vendor.c
+  cflags = -Istep3_bulk
+build build/step3/fw.elf : link build/common/startup.o build/common/system.o $
+    build/common/dbglog.o build/step3/main.o build/step3/usbd.o build/step3/desc.o $
+    build/step3/vendor.o
+  map = build/step3/fw.map
+build build/step3/fw.bin : bin build/step3/fw.elf
+build build/step3/fw.lst : lst build/step3/fw.elf
+build step3 : phony build/step3/fw.bin build/step3/fw.lst
+build flash-step3 : flash build/step3/fw.elf
+
+# ---- step4: Interrupt IN/OUT ----------------------------------------
+build build/step4/main.o : cc step4_interrupt/main.c
+  cflags = -Istep4_interrupt
+build build/step4/usbd.o : cc step4_interrupt/usbd.c
+  cflags = -Istep4_interrupt
+build build/step4/desc.o : cc step4_interrupt/desc.c
+  cflags = -Istep4_interrupt
+build build/step4/vendor.o : cc step4_interrupt/vendor.c
+  cflags = -Istep4_interrupt
+build build/step4/fw.elf : link build/common/startup.o build/common/system.o $
+    build/common/dbglog.o build/step4/main.o build/step4/usbd.o build/step4/desc.o $
+    build/step4/vendor.o
+  map = build/step4/fw.map
+build build/step4/fw.bin : bin build/step4/fw.elf
+build build/step4/fw.lst : lst build/step4/fw.elf
+build step4 : phony build/step4/fw.bin build/step4/fw.lst
+build flash-step4 : flash build/step4/fw.elf
+
+default step1 step2 step3 step4
